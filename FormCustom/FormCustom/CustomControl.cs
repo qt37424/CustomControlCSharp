@@ -10,4 +10,25 @@ namespace FormCustom
     {
         public CustomDataGridView() { }
     }
+
+    public class MergedCell : DataGridViewTextBoxCell
+    {
+        public Rectangle MergedBounds { get; set; }
+    }
+
+    public class MergedColumn : DataGridViewColumn
+    {
+        public MergedColumn() : base(new MergedCell()) { }
+
+        public override DataGridViewCell CellTemplate
+        {
+            get { return base.CellTemplate; }
+            set
+            {
+                if (value != null && !value.GetType().IsAssignableFrom(typeof(MergedCell)))
+                    throw new InvalidCastException("Must be a MergedCell");
+                base.CellTemplate = value;
+            }
+        }
+    }
 }

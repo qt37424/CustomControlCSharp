@@ -1,22 +1,17 @@
-using System.Reflection;
+﻿using System.Reflection;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace FormCustom
 {
     /*
         |================================================================================================|
-        |        |             |         |                         statement                             |
-        |        |NameCondition|  Type   |===============================================================|
-        |        |             |         | Prop1 | Prop2 | Prop3 | Prop4 | List<falseitem>               |
+        |        |          Formulas     |                         statement                             |
+        |        |=======================|===============================================================|
+        |        |    Name 1   |  Name2  | Prop1 | Prop2 | Prop3 | Prop4 | List<falseitem>               |
         |================================================================================================|
-        |        |    abcd     |  true   |       |       |       |       |                               |
-        |    1   |=============|=========| false | true  | false |   _   |                               |
-        |        |    defg     |  false  |       |       |       |       |                               |
+        |    1   |      -      |  true   | false | true  | false |   _   |                               |
         |================================================================================================|
-        |        |    abcd     |  true   |       |       |       |       |                               |
-        |        |=============|=========|       |       |       |       |                               |
         |    2   |    defg     |  false  | false |   -   | false |   -   |                               |
-        |        |=============|=========|       |       |       |       |                               |
-        |        |    defg     |  false  |       |       |       |       |                               |
         |================================================================================================|
         |    3   |    defg     |  false  | false |   -   | false |   -   |                               |
         |================================================================================================|
@@ -29,8 +24,17 @@ namespace FormCustom
             InitializeComponent();
         }
 
-        string[] headers = new string[] { };
+        // There will be a list item of Formulas and falseitem, will be send to intialize header table
+        string[] headersDefault = new string[] { "isused", "iseditable", "isenabled", "isstorable", "issendable", "defaultValue", "basicvalue", "value" };
 
+        // get the number of conditions/formulas
+        List<string> lstFormulas = new List<string>() { "PhoBo", "MiGoi", "ComChienTrung", "LapXuongNuongThanDa" };
+
+        /// <summary>
+        /// Load Main Form
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
             this.dataGridView1.ColumnHeadersHeightSizeMode = DataGridViewColumnHeadersHeightSizeMode.EnableResizing;
@@ -38,35 +42,41 @@ namespace FormCustom
             this.dataGridView1.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.BottomCenter;
             this.dataGridView1.ColumnHeadersBorderStyle = DataGridViewHeaderBorderStyle.None;
             this.dataGridView1.EnableHeadersVisualStyles = false;
-            this.dataGridView1.Columns.Add("", "");
-            this.dataGridView1.Columns.Add("", "Condition Name");
-            this.dataGridView1.Columns.Add("", "Win");
-            this.dataGridView1.Columns.Add("", "Loss");
-            this.dataGridView1.Columns.Add("", "Win");
-            this.dataGridView1.Columns.Add("", "Loss");
-            this.dataGridView1.Columns.Add("", "Win");
-            this.dataGridView1.Columns.Add("", "Loss");
-            this.dataGridView1.Columns.Add("", "Win");
-            this.dataGridView1.Columns.Add("", "Loss");
-            for (int j = 0; j < this.dataGridView1.ColumnCount; j++)
-            {
-                this.dataGridView1.Columns[j].Width = 45;
-                this.dataGridView1.Columns[j].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-                this.dataGridView1.Columns[j].SortMode = DataGridViewColumnSortMode.NotSortable;
-            }
-            this.AutoResizeAndFillColorHeaderDGV(dataGridView1, Color.SkyBlue, true);
+            int numFalseItems = 5; // get the amount of falseitem in sequenceconfig file.
+            this.CreateHeaderTableHeader(lstFormulas, numFalseItems);
+            //this.AutoResizeAndFillColorHeaderDGV(dataGridView1, Color.SkyBlue, true);
         }
 
+        /// <summary>
+        /// Paint the datagridview
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void dataGridView1_Paint(object sender, PaintEventArgs e)
         {
             DataGridView gridView = (DataGridView)sender;
             StringFormat format = new StringFormat();
             format.Alignment = StringAlignment.Center;
             format.LineAlignment = StringAlignment.Center;
-            Rectangle rDraw = gridView.GetCellDisplayRectangle(3, -1, true);
+
+            // for statement
+            Rectangle rDraw = gridView.GetCellDisplayRectangle(1, -1, true);
             rDraw.Y++;
             rDraw.Height /= 2;
-            for (int j = 3; j < gridView.ColumnCount; j++)
+            for (int j = 1; j < 1 + lstFormulas.Count(); j++)
+            {
+                rDraw.Width += ((DataGridView)sender).Columns[j].Width;
+            }
+            rDraw.Inflate(new Size(1, 1));
+            e.Graphics.FillRectangle(new SolidBrush(Color.Pink), rDraw);
+            ControlPaint.DrawBorder(e.Graphics, rDraw, Color.Gray, ButtonBorderStyle.Solid);
+            e.Graphics.DrawString("Fomulas", gridView.ColumnHeadersDefaultCellStyle.Font, Brushes.Black, rDraw, format);
+
+            // for statement
+            rDraw = gridView.GetCellDisplayRectangle(1 + lstFormulas.Count(), -1, true);
+            rDraw.Y++;
+            rDraw.Height /= 2;
+            for (int j = 1 + lstFormulas.Count(); j < gridView.ColumnCount; j++)
             {
                 rDraw.Width += ((DataGridView)sender).Columns[j].Width;
             }
@@ -76,6 +86,12 @@ namespace FormCustom
             e.Graphics.DrawString("statements", gridView.ColumnHeadersDefaultCellStyle.Font, Brushes.Black, rDraw, format);
         }
 
+        /// <summary>
+        /// Resize table, however there is a bug need to fix
+        /// </summary>
+        /// <param name="dgv"></param>
+        /// <param name="colorHeader"></param>
+        /// <param name="isAutoFit"></param>
         private void AutoResizeAndFillColorHeaderDGV(DataGridView dgv, Color colorHeader, bool isAutoFit = false)
         {
             if (isAutoFit)
@@ -109,6 +125,34 @@ namespace FormCustom
                     cell.Style.BackColor = colorHeader;
                     cell.Style.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 }
+            }
+            //for (int j = 0; j < this.dataGridView1.ColumnCount; j++)
+            //{
+            //    this.dataGridView1.Columns[j].Width = 45;
+            //    this.dataGridView1.Columns[j].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+            //    this.dataGridView1.Columns[j].SortMode = DataGridViewColumnSortMode.NotSortable;
+            //}
+        }
+
+        /// <summary>
+        /// Create header
+        /// </summary>
+        /// <param name="colFormulas"></param>
+        /// <param name="colFalseItem"></param>
+        private void CreateHeaderTableHeader(List<string> lstFormulasName, int colFalseItem = 1)
+        {
+            this.dataGridView1.Columns.Add("colNo", "");
+            foreach (var formulas in lstFormulasName)
+            {
+                this.dataGridView1.Columns.Add("colFormula_" + formulas, formulas);
+            }
+            foreach (var header in headersDefault)
+            {
+                this.dataGridView1.Columns.Add("colProperty_" + header, header);
+            }
+            for (int i = 0; i < colFalseItem; i++)
+            {
+                this.dataGridView1.Columns.Add("colFalseitem_" + i, "falseitem" + i);
             }
         }
     }
